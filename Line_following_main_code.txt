@@ -1,0 +1,189 @@
+#Main code
+#Constants for PD Part 1
+Kp = 3
+Kd = 2
+scale = 10 # to use float values in different way
+
+#System enabled variable
+system_enabled = False   # initially off
+
+#Constants fo PD Part 2
+base_speed = 350
+max_speed   = 400
+deadband    = 8
+last_error = 0
+
+#Constant for object detection
+object_side_scale  = 2000
+object_front_scale = 1800
+
+#Button Start and Stop control
+@onevent
+def buttons():
+    global system_enabled
+    global motor_left_target, motor_right_target
+    global leds_top
+    
+    if button_forward == 1:
+        system_enabled = True
+        nf_leds_top(0, 32, 0)   # green led = system on
+
+    elif button_backward == 1:
+        system_enabled = False
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_system(-1)     # stop sound
+        nf_leds_top(32, 0, 0)   # red led = system off
+
+#Poximity event
+@onevent
+def prox():
+    global motor_left_target, motor_right_target
+    global last_error, leds_top
+    global system_enabled
+
+#System disables = false
+    if not system_enabled:
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_system(-1)
+        return
+
+#Font obstacle detection and sound alert 
+    front_mid   = prox_horizontal[2]
+    
+    if front_mid   > object_front_scale:
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_freq(600,0)   # alert
+        return
+    else:
+        nf_sound_system(-1)     # alert off
+
+#Random led colour generator when side object detected (Sensors 0 and 4)
+    left_side_0 = prox_horizontal[0]
+    left_side_1 = prox_horizontal[1]
+    right_side_3 = prox_horizontal[3]
+    right_side_4 = prox_horizontal[4]
+
+    if left_side_0 > object_side_scale or left_side_1 > object_side_scale or right_side_3 > object_side_scale or right_side_4 > object_side_scale:
+        r = math_rand() % 32
+        g = math_rand() % 32
+        b = math_rand() % 32
+       
+        nf_leds_top(r, g, b)
+
+#PD control
+    left  = prox_ground_delta[0]
+    right = prox_ground_delta[1]
+
+    current_error = right - left    # for following black line
+
+    if -deadband < current_error < deadband:
+        current_error = 0
+
+    derivative = current_error - last_error
+    last_error = current_error
+
+    correction = (Kp*current_error + Kd*derivative) // scale
+
+    left_speed  = base_speed - correction
+    right_speed = base_speed + correction
+
+#Speed adjustments for movements
+    if left_speed > max_speed:
+        left_speed = max_speed
+    if left_speed < -max_speed: 
+        left_speed = -max_speed
+    if right_speed > max_speed: 
+        right_speed = max_speed
+    if right_speed < -max_speed: 
+        right_speed = -max_speed
+
+    motor_left_target  = left_speed
+    motor_right_target = right_speed
+
+#Secondary code
+#Constants for PD Part 1
+
+#System enabled variable
+system_enabled = False   # initially off
+
+#Constant for object detection
+object_side_scale  = 2000
+object_front_scale = 1800
+
+#Button Start and Stop control
+@onevent
+def buttons():
+    global system_enabled
+    global motor_left_target, motor_right_target
+    global leds_top
+    
+    if button_forward == 1:
+        system_enabled = True
+        nf_leds_top(0, 32, 0)   # green led = system on
+
+    elif button_backward == 1:
+        system_enabled = False
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_system(-1)     # stop sound
+        nf_leds_top(32, 0, 0)   # red led = system off
+
+#Poximity event
+@onevent
+def prox():
+    global motor_left_target, motor_right_target
+    global last_error, leds_top
+    global system_enabled
+
+#System disables = false
+    if not system_enabled:
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_system(-1)
+        return
+
+#Font obstacle detection and sound alert 
+    front_mid   = prox_horizontal[2]
+    
+    if front_mid   > object_front_scale:
+        motor_left_target = 0
+        motor_right_target = 0
+        nf_sound_freq(600,0)   # alert
+        return
+    else:
+        nf_sound_system(-1)     # alert off
+
+#Random led colour generator when side object detected (Sensors 0 and 4)
+    left_side_0 = prox_horizontal[0]
+    left_side_1 = prox_horizontal[1]
+    right_side_3 = prox_horizontal[3]
+    right_side_4 = prox_horizontal[4]
+
+    if left_side_0 > object_side_scale or left_side_1 > object_side_scale or right_side_3 > object_side_scale or right_side_4 > object_side_scale:
+        r = math_rand()//1023
+        g = math_rand()//1023
+        b = math_rand()//1023
+        if r > 0 :
+           r = r*-1
+        if g > 0 :
+           g = g*-1
+        if b > 0 :
+           b = b*-1
+        nf_leds_top(r, g, b)
+   if prox_groud_delta[0] > 500 and prox_ground_delta[1] > 500
+        motor_left_target = 0
+        motor_right_target = 0
+   elif prox_groud_delta[0] < 500 and prox_ground_delta[1] < 500
+        motor_left_target = 200
+        motor_right_target = 200
+   elif prox_groud_delta[0] > 500 and prox_ground_delta[1] < 500
+        motor_left_target = 200
+        motor_right_target = -200
+   elif prox_groud_delta[0] < 500 and prox_ground_delta[1] > 500
+        motor_left_target = -200
+        motor_right_target = 200
+
+  
